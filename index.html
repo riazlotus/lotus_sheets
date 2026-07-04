@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Lotus Sheets</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F6F2E7;
+    --header-row: #EFE7D3;
+    --surface: #FFFFFF;
+    --ink: #22291F;
+    --ink-soft: #6B7263;
+    --forest: #1B4332;
+    --forest-light: #2D6A4F;
+    --petal: #E6A895;
+    --petal-dark: #C2664D;
+    --line: #E4DEC9;
+    --line-strong: #D3C9AC;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px 60px;
+  }
+  .app{ max-width: 1160px; margin: 0 auto; }
+
+  header{ display:flex; align-items:center; gap:14px; margin-bottom: 22px; }
+  .mark{ width: 40px; height: 40px; flex-shrink:0; }
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0;
+    color: var(--forest);
+    letter-spacing: -0.01em;
+  }
+  .tagline{ margin: 2px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+
+  .toolbar{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+  .ref-box{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--header-row);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 6px 10px;
+    min-width: 54px;
+    text-align: center;
+    color: var(--forest);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .fx{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--petal-dark);
+    font-size: 15px;
+    flex-shrink: 0;
+    padding: 0 2px;
+  }
+  #formulaInput{
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 7px 10px;
+    outline: none;
+    background: var(--surface);
+    color: var(--ink);
+  }
+  #formulaInput:focus{ border-color: var(--petal-dark); }
+  .clear-btn{
+    flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--forest);
+    background: var(--header-row);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  .clear-btn:hover{ background: var(--line); }
+  .fmt-btn{
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--forest);
+    background: var(--header-row);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fmt-btn:hover{ background: var(--line); }
+  .fmt-btn.active{ background: var(--petal); border-color: var(--petal-dark); color: var(--forest); }
+  .fmt-btn.b{ font-weight: 600; }
+  .fmt-btn.i{ font-style: italic; }
+  #colorPicker{
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .divider{
+    width: 1px;
+    height: 22px;
+    background: var(--line-strong);
+    flex-shrink: 0;
+  }
+
+  .grid-wrap{
+    overflow: auto;
+    max-height: 560px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .grid{
+    display: grid;
+    grid-template-columns: 46px repeat(10, 106px);
+    width: max-content;
+  }
+  .hcell{
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--header-row);
+    color: var(--ink-soft);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    border-right: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .corner{
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 4;
+    background: var(--header-row);
+    border-right: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .rnum{
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--header-row);
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+  }
+  .cell{
+    width: 100%;
+    height: 28px;
+    border: none;
+    outline: none;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: transparent;
+    color: var(--ink);
+  }
+  .cell:focus{
+    position: relative;
+    z-index: 5;
+    background: #fff;
+    outline: 2px solid var(--petal-dark);
+    outline-offset: -2px;
+  }
+
+  .legend{
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .legend b{ color: var(--forest); font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <svg class="mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <path d="M20 30 C 12 26, 10 18, 14 10 C 18 18, 18 24, 20 30 Z" fill="#E6A895"/>
+        <path d="M20 30 C 28 26, 30 18, 26 10 C 22 18, 22 24, 20 30 Z" fill="#C2664D"/>
+        <path d="M20 30 C 15 24, 15 16, 20 8 C 25 16, 25 24, 20 30 Z" fill="#2D6A4F"/>
+        <ellipse cx="20" cy="31" rx="9" ry="2.4" fill="#1B4332"/>
+      </g>
+    </svg>
+    <div>
+      <h1>Lotus Sheets</h1>
+      <p class="tagline">A simple spreadsheet, calmly done.</p>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="ref-box" id="refBox">A1</div>
+    <span class="fx">fx</span>
+    <input id="formulaInput" type="text" placeholder="Enter a value or formula, e.g. =SUM(A1:A5)" />
+    <div class="divider"></div>
+    <button class="fmt-btn b" id="boldBtn" title="Bold">B</button>
+    <button class="fmt-btn i" id="italicBtn" title="Italic">I</button>
+    <input type="color" id="colorPicker" title="Text color" value="#22291f" />
+    <div class="divider"></div>
+    <button class="fmt-btn" id="undoBtn" title="Undo (Ctrl+Z)">↶</button>
+    <button class="fmt-btn" id="redoBtn" title="Redo (Ctrl+Y)">↷</button>
+    <div class="divider"></div>
+    <button class="clear-btn" id="clearBtn">Clear sheet</button>
+    <button class="clear-btn" id="downloadBtn">Export CSV</button>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <p class="legend">
+    <b>Formulas:</b> =A1+B2&nbsp;&nbsp;·&nbsp;&nbsp;=SUM(A1:A5)&nbsp;&nbsp;·&nbsp;&nbsp;=AVERAGE(A1:A5)&nbsp;&nbsp;·&nbsp;&nbsp;=MIN(A1:A5)&nbsp;&nbsp;·&nbsp;&nbsp;=MAX(A1:A5)&nbsp;&nbsp;·&nbsp;&nbsp;=COUNT(A1:A5)
+  </p>
+</div>
+
+<script>
+  const COLS = ['A','B','C','D','E','F','G','H','I','J'];
+  const ROWS = 30;
+  const data = {};
+  const formats = {};
+  let activeRef = 'A1';
+  let beforeEdit = '';
+  const history = [];
+  let historyIndex = -1;
+
+  function snapshot(){
+    return JSON.stringify({ data, formats });
+  }
+  function pushHistory(){
+    const snap = snapshot();
+    if(historyIndex >= 0 && history[historyIndex] === snap) return;
+    history.length = historyIndex + 1;
+    history.push(snap);
+    if(history.length > 100){ history.shift(); }
+    historyIndex = history.length - 1;
+    updateUndoRedoButtons();
+  }
+  function restoreSnapshot(snap){
+    const parsed = JSON.parse(snap);
+    Object.keys(data).forEach(k => delete data[k]);
+    Object.assign(data, parsed.data);
+    Object.keys(formats).forEach(k => delete formats[k]);
+    Object.assign(formats, parsed.formats);
+    renderAll();
+    COLS.forEach(c => { for(let r=1;r<=ROWS;r++) applyFormatToInput(c+r); });
+    document.getElementById('formulaInput').value = data[activeRef] || '';
+    syncToolbar(activeRef);
+  }
+  function undo(){
+    if(historyIndex > 0){
+      historyIndex--;
+      restoreSnapshot(history[historyIndex]);
+      updateUndoRedoButtons();
+    }
+  }
+  function redo(){
+    if(historyIndex < history.length - 1){
+      historyIndex++;
+      restoreSnapshot(history[historyIndex]);
+      updateUndoRedoButtons();
+    }
+  }
+  function updateUndoRedoButtons(){
+    document.getElementById('undoBtn').style.opacity = historyIndex > 0 ? '1' : '0.4';
+    document.getElementById('redoBtn').style.opacity = historyIndex < history.length - 1 ? '1' : '0.4';
+  }
+
+  const sample = {
+    A1:'Item', B1:'Qty', C1:'Price', D1:'Total',
+    A2:'Lotus seeds', B2:'4', C2:'3.5', D2:'=B2*C2',
+    A3:'Clay pots', B3:'6', C3:'2.25', D3:'=B3*C3',
+    A4:'Fertilizer', B4:'2', C4:'8', D4:'=B4*C4',
+    A6:'Total', D6:'=SUM(D2:D4)',
+    A7:'Average', D7:'=AVERAGE(D2:D4)'
+  };
+  Object.assign(data, sample);
+
+  function colToIndex(col){
+    let idx = 0;
+    for(let i=0;i<col.length;i++) idx = idx*26 + (col.charCodeAt(i)-64);
+    return idx;
+  }
+  function indexToCol(idx){
+    let s = '';
+    while(idx>0){
+      const rem = (idx-1)%26;
+      s = String.fromCharCode(65+rem)+s;
+      idx = Math.floor((idx-1)/26);
+    }
+    return s;
+  }
+  function parseRef(ref){
+    const m = ref.match(/^([A-Z]+)(\d+)$/);
+    return { col: m[1], row: parseInt(m[2],10) };
+  }
+  function rangeCells(startRef, endRef){
+    const s = parseRef(startRef), e = parseRef(endRef);
+    const c1 = colToIndex(s.col), c2 = colToIndex(e.col);
+    const cells = [];
+    for(let c=Math.min(c1,c2); c<=Math.max(c1,c2); c++){
+      for(let r=Math.min(s.row,e.row); r<=Math.max(s.row,e.row); r++){
+        cells.push(indexToCol(c)+r);
+      }
+    }
+    return cells;
+  }
+
+  const evaluating = new Set();
+
+  function getCellValue(ref){
+    ref = ref.toUpperCase();
+    if(evaluating.has(ref)) return '#REF!';
+    const raw = data[ref];
+    if(raw === undefined || raw === '') return '';
+    if(typeof raw === 'string' && raw.trim().startsWith('=')){
+      evaluating.add(ref);
+      const result = evaluateFormula(raw.trim().slice(1));
+      evaluating.delete(ref);
+      return result;
+    }
+    return raw;
+  }
+  function getCellNumeric(ref){
+    const v = getCellValue(ref);
+    const n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function replaceFunctions(expr){
+    const re = /(SUM|AVERAGE|MIN|MAX|COUNT)\(([A-Z]+\d+):([A-Z]+\d+)\)/;
+    let m, guard = 0;
+    while((m = expr.match(re)) && guard < 200){
+      guard++;
+      const [full, fn, start, end] = m;
+      const cells = rangeCells(start, end);
+      let result;
+      if(fn === 'COUNT'){
+        result = cells.filter(c => getCellValue(c) !== '').length;
+      } else {
+        const nums = cells.map(getCellNumeric);
+        if(fn === 'SUM') result = nums.reduce((a,b)=>a+b,0);
+        else if(fn === 'AVERAGE') result = nums.length ? nums.reduce((a,b)=>a+b,0)/nums.length : 0;
+        else if(fn === 'MIN') result = nums.length ? Math.min(...nums) : 0;
+        else if(fn === 'MAX') result = nums.length ? Math.max(...nums) : 0;
+      }
+      expr = expr.replace(full, String(result));
+    }
+    return expr;
+  }
+
+  function evaluateFormula(expr){
+    try{
+      let e = expr.toUpperCase().replace(/\s+/g,'');
+      e = replaceFunctions(e);
+      e = e.replace(/[A-Z]+\d+/g, ref => String(getCellNumeric(ref)));
+      if(!/^[0-9+\-*/().]*$/.test(e)) return '#ERR';
+      const val = Function('"use strict";return ('+e+')')();
+      if(typeof val !== 'number' || !isFinite(val)) return '#ERR';
+      return Math.round(val * 10000) / 10000;
+    } catch(err){
+      return '#ERR';
+    }
+  }
+
+  function formatDisplay(ref){
+    const v = getCellValue(ref);
+    if(v === '') return '';
+    return String(v);
+  }
+
+  const grid = document.getElementById('grid');
+  const inputs = {};
+
+  function buildGrid(){
+    grid.appendChild(Object.assign(document.createElement('div'), { className:'corner' }));
+    COLS.forEach(c => {
+      const h = document.createElement('div');
+      h.className = 'hcell';
+      h.textContent = c;
+      grid.appendChild(h);
+    });
+    for(let r=1; r<=ROWS; r++){
+      const rn = document.createElement('div');
+      rn.className = 'rnum';
+      rn.textContent = r;
+      grid.appendChild(rn);
+      COLS.forEach(c => {
+        const ref = c + r;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'cell';
+        input.id = 'cell-' + ref;
+        input.addEventListener('focus', () => onFocusCell(ref));
+        input.addEventListener('input', (e) => onEditCell(ref, e.target.value));
+        input.addEventListener('keydown', (e) => onKeydown(e, ref));
+        input.addEventListener('blur', () => onBlurCell(ref));
+        grid.appendChild(input);
+        inputs[ref] = input;
+      });
+    }
+  }
+
+  function getFormat(ref){
+    return formats[ref] || { bold:false, italic:false, color:'' };
+  }
+  function applyFormatToInput(ref){
+    const f = getFormat(ref);
+    const el = inputs[ref];
+    el.style.fontWeight = f.bold ? '600' : '400';
+    el.style.fontStyle = f.italic ? 'italic' : 'normal';
+    el.style.color = f.color || '';
+  }
+  function setFormat(ref, patch){
+    formats[ref] = Object.assign({}, getFormat(ref), patch);
+    applyFormatToInput(ref);
+  }
+  function syncToolbar(ref){
+    const f = getFormat(ref);
+    document.getElementById('boldBtn').classList.toggle('active', !!f.bold);
+    document.getElementById('italicBtn').classList.toggle('active', !!f.italic);
+    document.getElementById('colorPicker').value = f.color || '#22291f';
+  }
+
+  function onFocusCell(ref){
+    activeRef = ref;
+    beforeEdit = data[ref] || '';
+    document.getElementById('refBox').textContent = ref;
+    document.getElementById('formulaInput').value = data[ref] || '';
+    inputs[ref].value = data[ref] || '';
+    syncToolbar(ref);
+  }
+  function onEditCell(ref, value){
+    data[ref] = value;
+    if(ref === activeRef){
+      document.getElementById('formulaInput').value = value;
+    }
+  }
+  function onBlurCell(ref){
+    if((data[ref] || '') !== beforeEdit){
+      pushHistory();
+    }
+  }
+  function onKeydown(e, ref){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const { col, row } = parseRef(ref);
+      renderAll();
+      const next = col + Math.min(row+1, ROWS);
+      inputs[next].focus();
+    }
+  }
+
+  function renderAll(){
+    COLS.forEach(c => {
+      for(let r=1; r<=ROWS; r++){
+        const ref = c + r;
+        if(document.activeElement === inputs[ref]) continue;
+        const display = formatDisplay(ref);
+        inputs[ref].value = display;
+        inputs[ref].style.textAlign = (display !== '' && !isNaN(display)) ? 'right' : 'left';
+      }
+    });
+  }
+
+  const formulaInput = document.getElementById('formulaInput');
+  formulaInput.addEventListener('input', (e) => {
+    data[activeRef] = e.target.value;
+    inputs[activeRef].value = e.target.value;
+  });
+  formulaInput.addEventListener('blur', () => {
+    if((data[activeRef] || '') !== beforeEdit){
+      pushHistory();
+      beforeEdit = data[activeRef] || '';
+    }
+  });
+  formulaInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      if((data[activeRef] || '') !== beforeEdit){
+        pushHistory();
+        beforeEdit = data[activeRef] || '';
+      }
+      renderAll();
+      inputs[activeRef].focus();
+    }
+  });
+
+  document.getElementById('boldBtn').addEventListener('click', () => {
+    const f = getFormat(activeRef);
+    setFormat(activeRef, { bold: !f.bold });
+    syncToolbar(activeRef);
+    pushHistory();
+  });
+  document.getElementById('italicBtn').addEventListener('click', () => {
+    const f = getFormat(activeRef);
+    setFormat(activeRef, { italic: !f.italic });
+    syncToolbar(activeRef);
+    pushHistory();
+  });
+  document.getElementById('colorPicker').addEventListener('input', (e) => {
+    setFormat(activeRef, { color: e.target.value });
+  });
+  document.getElementById('colorPicker').addEventListener('change', () => {
+    pushHistory();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    Object.keys(data).forEach(k => delete data[k]);
+    Object.keys(formats).forEach(k => delete formats[k]);
+    formulaInput.value = '';
+    renderAll();
+    COLS.forEach(c => { for(let r=1;r<=ROWS;r++) applyFormatToInput(c+r); });
+    syncToolbar(activeRef);
+    pushHistory();
+  });
+
+  document.getElementById('undoBtn').addEventListener('click', undo);
+  document.getElementById('redoBtn').addEventListener('click', redo);
+  document.addEventListener('keydown', (e) => {
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+    if(!ctrlOrCmd) return;
+    if(e.key === 'z' || e.key === 'Z'){
+      e.preventDefault();
+      if(e.shiftKey) redo(); else undo();
+    } else if(e.key === 'y' || e.key === 'Y'){
+      e.preventDefault();
+      redo();
+    }
+  });
+
+  function computeUsedRange(){
+    let maxColIdx = 4, maxRow = 7;
+    COLS.forEach(c => {
+      for(let r=1; r<=ROWS; r++){
+        const ref = c + r;
+        if(data[ref] !== undefined && data[ref] !== ''){
+          maxColIdx = Math.max(maxColIdx, colToIndex(c));
+          maxRow = Math.max(maxRow, r);
+        }
+      }
+    });
+    return { maxColIdx, maxRow };
+  }
+
+  function escapeCsvField(str){
+    const s = String(str);
+    if(/[",\n]/.test(s)){
+      return '"' + s.replace(/"/g,'""') + '"';
+    }
+    return s;
+  }
+
+  function buildCsv(){
+    const { maxColIdx, maxRow } = computeUsedRange();
+    const lines = [];
+    for(let r=1; r<=maxRow; r++){
+      const fields = [];
+      for(let ci=1; ci<=maxColIdx; ci++){
+        const ref = indexToCol(ci) + r;
+        fields.push(escapeCsvField(formatDisplay(ref)));
+      }
+      lines.push(fields.join(','));
+    }
+    return lines.join('\r\n');
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    renderAll();
+    const csv = buildCsv();
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lotus-sheets.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  buildGrid();
+  renderAll();
+  COLS.forEach(c => { for(let r=1;r<=ROWS;r++) applyFormatToInput(c+r); });
+  syncToolbar(activeRef);
+  pushHistory();
+</script>
+</body>
+</html>
